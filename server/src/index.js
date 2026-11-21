@@ -22,6 +22,8 @@ if (!process.env.JWT_SECRET) {
 }
 
 const app = express();
+// Behind a reverse proxy (nginx, Render, etc.) set TRUST_PROXY=1 so req.ip is the real client address.
+if (process.env.TRUST_PROXY) app.set("trust proxy", Number(process.env.TRUST_PROXY) || process.env.TRUST_PROXY);
 const port = process.env.PORT || 3001;
 
 app.use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" } }));
