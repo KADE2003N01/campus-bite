@@ -6,6 +6,7 @@ import { requireRole } from "../middleware/roleGuard.js";
 import { upload, fileUrl } from "../middleware/upload.js";
 import { requireVendor, toInt, isValidHHMM } from "../utils/helpers.js";
 import { serializeReview } from "../utils/format.js";
+import { notify, orderEvent } from "../realtime.js";
 
 const router = Router();
 router.use(authenticate, requireRole("VENDOR"));
@@ -259,7 +260,14 @@ router.patch("/orders/:id/status", async (req, res, next) => {
       if (order.payment_status === "PAID") data.payment_status = "REFUNDED";
     }
 
-    const updated = await prisma.order.update({ where: { id: order.id }, data, include: VENDOR_ORDER_INCLUDE });
+    // Conditional write: fails if the student cancelled/paid (or another tab moved it) since we read it
+    const changed = await prisma.order.updateMany({
+      where: { id: order.id, vendor_id: vendor.id, status: order.status, payment_status: order.payment_status },
+      data,
+    });
+    if (changed.count !== 1) throw new AppError("This order just changed. The board has been refreshed.", 409);
+    const updated = await prisma.order.findUnique({ where: { id: order.id }, include: VENDOR_ORDER_INCLUDE });
+    notify([order.student_id, req.user.id], "order.updated", orderEvent(updated));
     res.json(redactFinished(updated));
   } catch (err) {
     next(err);

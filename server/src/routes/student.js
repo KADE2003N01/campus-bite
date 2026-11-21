@@ -3,6 +3,7 @@ import prisma from "../utils/prisma.js";
 import { AppError } from "../utils/errors.js";
 import { authenticate } from "../middleware/auth.js";
 import { requireRole } from "../middleware/roleGuard.js";
+import { notify, orderEvent } from "../realtime.js";
 import fs from "node:fs";
 import { upload, fileUrl } from "../middleware/upload.js";
 import { uniqueOrderCode, toInt, hhmm, evaluatePromo, recomputeRating, slotLoad } from "../utils/helpers.js";
@@ -18,6 +19,10 @@ const ORDER_INCLUDE = {
   items: { include: { menu_item: { select: { id: true, name: true, image_url: true } } } },
   review: { include: { photos: true } },
 };
+
+async function vendorOwner(vendorId) {
+  return (await prisma.vendor.findUnique({ where: { id: vendorId }, select: { user_id: true } }))?.user_id;
+}
 
 async function ownOrder(req) {
   const order = await prisma.order.findUnique({ where: { id: toInt(req.params.id) } });
@@ -97,7 +102,18 @@ router.post("/orders", async (req, res, next) => {
       if ((await slotLoad(vendor.id, pickup, tx)) >= vendor.slot_capacity) {
         throw new AppError("That pickup time just filled up. Please pick another slot.", 409);
       }
-      if (promo) await tx.promo.update({ where: { id: promo.promo.id }, data: { used_count: { increment: 1 } } });
+      if (promo) {
+        // conditional increment: never exceeds max_uses even with simultaneous checkouts
+        const claimed = await tx.promo.updateMany({
+          where: {
+            id: promo.promo.id,
+            is_active: true,
+            OR: [{ max_uses: null }, { used_count: { lt: promo.promo.max_uses ?? 0 } }],
+          },
+          data: { used_count: { increment: 1 } },
+        });
+        if (claimed.count !== 1) throw new AppError(`${promo.code} has just been fully used`, 409);
+      }
       return tx.order.create({
         data: {
           code: await uniqueOrderCode(tx),
@@ -118,6 +134,7 @@ router.post("/orders", async (req, res, next) => {
       });
     }, { isolationLevel: "Serializable" });
 
+    notify([vendor.user_id], "order.created", orderEvent(order));
     res.status(201).json(order);
   } catch (err) {
     if (err?.code === "P2034") return next(new AppError("Lots of orders are coming in at once. Please try again.", 409));
@@ -154,11 +171,13 @@ router.post("/orders/:id/pay", async (req, res, next) => {
     if (order.payment_method === "CASH") throw new AppError("This order is paid in cash at pickup", 400);
     if (order.status === "CANCELLED") throw new AppError("This order was cancelled", 400);
     if (order.payment_status === "PAID") throw new AppError("Already paid", 400);
-    const updated = await prisma.order.update({
-      where: { id: order.id },
+    const changed = await prisma.order.updateMany({
+      where: { id: order.id, payment_status: "PENDING", status: { not: "CANCELLED" } },
       data: { payment_status: "PAID" },
-      include: ORDER_INCLUDE,
     });
+    if (changed.count !== 1) throw new AppError("This order just changed. Refresh to see its latest status.", 409);
+    const updated = await prisma.order.findUnique({ where: { id: order.id }, include: ORDER_INCLUDE });
+    notify([req.user.id, await vendorOwner(order.vendor_id)], "order.updated", orderEvent(updated));
     res.json(updated);
   } catch (err) {
     next(err);
@@ -185,23 +204,26 @@ router.post("/orders/:id/cancel", async (req, res, next) => {
       throw new AppError("The kitchen has already accepted this order. Call the shop to cancel.", 400);
     }
     const updated = await prisma.$transaction(async (tx) => {
-      if (order.promo_code) {
-        await tx.promo.updateMany({
-          where: { vendor_id: order.vendor_id, code: order.promo_code, used_count: { gt: 0 } },
-          data: { used_count: { decrement: 1 } },
-        });
-      }
-      return tx.order.update({
-        where: { id: order.id },
+      // Only succeeds if nobody (vendor accept, a payment, a second click) changed the order meanwhile
+      const changed = await tx.order.updateMany({
+        where: { id: order.id, student_id: req.user.id, status: "SUBMITTED", payment_status: order.payment_status },
         data: {
           status: "CANCELLED",
           cancelled_by: "STUDENT",
           cancel_reason: req.body?.reason ? String(req.body.reason).slice(0, 200) : "Cancelled by customer",
           payment_status: order.payment_status === "PAID" ? "REFUNDED" : order.payment_status,
         },
-        include: ORDER_INCLUDE,
       });
+      if (changed.count !== 1) throw new AppError("This order just changed. Refresh to see its latest status.", 409);
+      if (order.promo_code) {
+        await tx.promo.updateMany({
+          where: { vendor_id: order.vendor_id, code: order.promo_code, used_count: { gt: 0 } },
+          data: { used_count: { decrement: 1 } },
+        });
+      }
+      return tx.order.findUnique({ where: { id: order.id }, include: ORDER_INCLUDE });
     });
+    notify([req.user.id, await vendorOwner(order.vendor_id)], "order.updated", orderEvent(updated));
     res.json(updated);
   } catch (err) {
     next(err);

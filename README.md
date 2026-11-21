@@ -183,11 +183,12 @@ npm run test:smoke
 
 To point it at another port: `API_URL=http://localhost:3002 npm run test:smoke`.
 
-It runs 30 checks through the real API:
+It runs 33 checks through the real API:
 - browse and search
 - log in as a student and as the shop's owner
 - place a MoMo order (dishes, quantities, pickup slot)
 - pay, then move the order Submitted → Accepted → Preparing → Ready → Completed, and check the student sees every step
+- check the live event stream: the vendor is pushed the new order and the student is pushed "Ready for pickup" instantly
 - post a review with a photo
 - cancel a paid order and check it's refunded
 - guard rails: invalid phone, unknown promo code, wrong role, no login, phone numbers hidden on finished orders
@@ -206,7 +207,7 @@ Use two browser windows, or one normal and one private window, so the student an
 6. Type promo code `SMASH2026` → **Apply**. The total drops by 15%.
 7. Leave **MTN MoMo** selected (the phone number is pre-filled) → **Place order**.
 8. On the order page, answer *"How easy was it?"* and click **I've approved it** to simulate the MoMo payment. A green toast confirms it.
-9. Keep this page open. It refreshes itself as the vendor works (steps 7.3).
+9. Keep this page open, or keep browsing other shops. Status changes arrive instantly (see 7.3). When the vendor marks it ready, a green **Ready for pickup** alert appears on whatever page you're on.
 10. When it shows **Completed**, click **Write a review**, give stars, write a comment (English or Kinyarwanda) and add a photo.
 11. Open the shop's **Reviews** tab and find your review with its photo.
 
@@ -219,8 +220,8 @@ Also try:
 ### 7.3 Manual walkthrough: vendor
 
 1. In the second window, log in as `olivier@campusbite.test`. Vendors land in their own workspace, not the student pages.
-2. Go to **Orders → Live board**. Within 15 seconds of the student placing the order, a blue **New order** toast appears. The card is highlighted, and a chime plays if *Sound for new orders* is on.
-3. Click **Accept** → **Start preparing** → **Mark ready** → **Mark completed**, watching the student's page update in the other window.
+2. Go to **Orders → Live board**. The top right says *Live: new orders appear instantly*. When the student places the order, the card appears straight away with a blue **New order** toast and a highlight, and a chime plays if *Sound for new orders* is on.
+3. Click **Accept** → **Start preparing** → **Mark ready** → **Mark completed**. The student's window updates within a fraction of a second.
 4. Try **Cancel** on another order. You must choose a reason, which the student sees.
 5. **Menu:** add a dish with a photo, edit a price, switch a dish to *sold out*. Students then can't order it.
 6. **Reviews:** filter by *Needs reply* and reply to one (many are in Kinyarwanda).
@@ -236,9 +237,24 @@ Also try:
 - **Evaluation numbers:** **How it works** (`/about`) shows live time-to-order, ease rating and completion rate.
 - **Roles:** while logged in as a student, open `/vendor`. You're sent back to the storefront.
 
-### 7.5 Screenshots of the full flow
+### 7.5 Live updates
 
-[`docs/screenshots/order-flow/`](docs/screenshots/order-flow/README.md) has 22 screenshots from a recorded run. They follow one order from the first visit to the vendor completing it, then show Kinyarwanda reviews and each toast type.
+Order changes are pushed to the browser the moment they happen, using **Server-Sent Events**:
+
+1. Every logged-in browser keeps one connection to `GET /api/v1/stream`. The login token goes in the `Authorization` header, never in the URL.
+2. When an order is created, paid, cancelled or changes status, the API sends an `order.created` or `order.updated` event to the student and the shop owner involved, and nobody else.
+3. Screens refresh as soon as an event arrives. Measured in testing:
+   - a new order reached the vendor board in about 0.1 s
+   - "Ready for pickup" reached the student in under 0.1 s
+4. If the connection drops, the browser reconnects automatically with back-off. It refetches anything it missed, and screens fall back to checking every 10–60 seconds until the connection is back.
+
+**To see it:** open the student and vendor windows side by side and click **Mark ready**.
+
+Events are held in memory, so this assumes one API process. Running several instances would need a shared channel such as Redis pub/sub or PostgreSQL `LISTEN/NOTIFY`.
+
+### 7.6 Screenshots of the full flow
+
+[`docs/screenshots/order-flow/`](docs/screenshots/order-flow/README.md) has 24 screenshots from recorded runs. They follow one order from the first visit to the vendor completing it, then show Kinyarwanda reviews, each toast type, and live updates arriving instantly.
 
 ## 8. Troubleshooting
 
@@ -252,6 +268,7 @@ Also try:
 | No pickup times at checkout | The shop is closed for today, or past its last slot. Try Burger Lab (until 22:00) or change hours in Shop settings. |
 | Photos don't show | The browser needs internet access to load Unsplash images. Uploaded photos are in `server/uploads/`. |
 | Smoke test exits with *"No shop has pickup slots left"* | All shops are closed at this hour. Run it during opening hours. |
+| Vendor board says *Reconnecting…* | The live connection dropped (API restarted, or a proxy is buffering). It reconnects by itself; meanwhile the board still refreshes every 10 seconds. |
 
 ## 9. Project structure
 
@@ -266,6 +283,7 @@ server/                      Express API
   prisma/schema.prisma       Database schema
   prisma/seed.js             Demo data
   scripts/smoke-test.js      End-to-end API test
+  src/realtime.js            Live order events (Server-Sent Events)
   src/routes/                auth, catalog (public), student, vendor
   src/middleware/            auth, role guard, uploads, sanitising, errors
 docs/                        Project proposal and screenshots
@@ -275,6 +293,7 @@ docs/                        Project proposal and screenshots
 
 | Area | Endpoints |
 |---|---|
+| Live | `GET /stream` (Server-Sent Events: `order.created`, `order.updated`) |
 | Auth | `POST /auth/register`, `POST /auth/login`, `GET/PATCH /auth/me`, `POST /auth/me/password` |
 | Public | `GET /vendors`, `/vendors/:id`, `/vendors/:id/reviews`, `/vendors/:id/slots`, `/menu/search`, `/menu/popular`, `/menu/categories`, `/insights` |
 | Student | `POST/GET /orders`, `GET /orders/:id`, `POST /orders/:id/pay \| cancel \| review \| ease`, `POST /promos/validate`, `GET/PUT/DELETE /favorites` |
@@ -293,7 +312,7 @@ The brief is `E-commerce_Project_.pdf`, the group's proposal.
 | Vendor dashboard, order history | `/vendor`, `/orders` |
 | Security: only vendors manage vendor functions (§2.5.2) | JWT + role guard on every `/vendor/*` route; ownership checks per item and order |
 | Privacy: collect only what's needed | Phone optional; vendors see phone numbers only for in-progress orders; reviews show first name + initial |
-| Risk: missed orders (§2.9) | Badge, tab-title count, optional chime, highlighted new cards |
+| Risk: missed orders (§2.9) | Orders pushed live to the board, badge, tab-title count, optional chime, highlighted new cards |
 | Risk: busy pickup periods | 10-minute pickup slots with a per-shop cap; pause-orders switch |
 | Evaluation: time to order, ease of use (§2.10) | Checkout time recorded per order, one-tap "how easy was it?" after ordering, live figures on `/about` |
 

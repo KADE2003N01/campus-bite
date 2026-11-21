@@ -25,3 +25,6 @@ Captured automatically in headless Chrome (1366×900) against the running app wi
 | 19 | Reviews written in Kinyarwanda, with an owner reply | Visitor |
 | 20 | Warning toast: order cancelled | Student |
 | 21 | Error toast: duplicate promo code | Vendor |
+| 22 | All four toast types (success, error, warning, info) | — |
+| 23 | Live: new order appears on the vendor board instantly (~0.1 s) | Vendor |
+| 24 | Live: "Ready for pickup" alert reaches the student on another page | Student |

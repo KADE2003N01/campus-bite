@@ -31,6 +31,34 @@ async function call(method, path, { token, body, form } = {}) {
   try { data = await res.json(); } catch { /* empty body */ }
   return { status: res.status, data };
 }
+/** Opens the live event stream and records every event it receives. */
+async function listen(token) {
+  const events = [];
+  const ctrl = new AbortController();
+  const res = await fetch(API + "/stream", { headers: { authorization: `Bearer ${token}` }, signal: ctrl.signal });
+  (async () => {
+    const reader = res.body.pipeThrough(new TextDecoderStream()).getReader();
+    let buf = "";
+    try {
+      for (;;) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        buf += value;
+        let i;
+        while ((i = buf.indexOf("\n\n")) >= 0) {
+          const frame = buf.slice(0, i);
+          buf = buf.slice(i + 2);
+          const ev = frame.match(/^event: (.+)$/m)?.[1];
+          const data = frame.match(/^data: (.+)$/m)?.[1];
+          if (ev && data) events.push({ event: ev, ...JSON.parse(data) });
+        }
+      }
+    } catch { /* aborted */ }
+  })();
+  return { events, close: () => ctrl.abort(), status: res.status };
+}
+const until = async (fn, ms = 3000) => { const end = Date.now() + ms; while (Date.now() < end) { if (fn()) return true; await new Promise((r) => setTimeout(r, 25)); } return false; };
+
 const login = async (email) => (await call("POST", "/auth/login", { body: { email, password: PASSWORD } })).data?.token;
 
 // 1×1 transparent PNG used as a review photo
@@ -69,6 +97,10 @@ if (!shop) {
 ok(`using ${shop.shop_name} (vendor logs in, ${slots.length} free pickup slots)`);
 
 const menu = (await call("GET", `/vendors/${shop.id}`)).data.items.filter((i) => i.is_available);
+
+const vendorLive = await listen(vendorToken);
+const studentLive = await listen(student);
+assert(vendorLive.status === 200 && studentLive.status === 200, "live event streams open for vendor and student");
 const [a, b] = menu;
 
 // ── Place, pay, prepare, complete ──
@@ -87,6 +119,7 @@ const order = await call("POST", "/orders", {
 assert(order.status === 201, `student places an order (${order.data?.code})`, order.data);
 assert(order.data.total_amount === a.price * 2 + b.price, "server calculates the total from current menu prices");
 assert(order.data.status === "SUBMITTED" && order.data.payment_status === "PENDING", "order starts as Submitted, payment pending");
+assert(await until(() => vendorLive.events.some((e) => e.event === "order.created" && e.id === order.data.id)), "vendor is pushed the new order instantly");
 
 const paid = await call("POST", `/orders/${order.data.id}/pay`, { token: student });
 assert(paid.data?.payment_status === "PAID", "mobile money payment is confirmed");
@@ -103,6 +136,10 @@ for (const status of ["ACCEPTED", "PREPARING", "READY", "COMPLETED"]) {
   const seen = await call("GET", `/orders/${order.data.id}`, { token: student });
   assert(seen.data.status === status, `  student sees ${status}`);
 }
+
+assert(await until(() => studentLive.events.some((e) => e.event === "order.updated" && e.id === order.data.id && e.status === "READY")), "student is pushed \"Ready for pickup\" instantly");
+vendorLive.close();
+studentLive.close();
 
 // ── Review with a photo ──
 const form = new FormData();

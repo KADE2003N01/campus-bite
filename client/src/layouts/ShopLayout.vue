@@ -5,6 +5,27 @@ import { useAuthStore } from "../stores/auth.js";
 import { useCartStore } from "../stores/cart.js";
 import Logo from "../components/ui/Logo.vue";
 import CartDrawer from "../components/shop/CartDrawer.vue";
+import { onMounted, onBeforeUnmount } from "vue";
+import { on } from "../composables/useRealtime.js";
+import { useToast } from "../composables/useToast.js";
+
+const toast = useToast();
+let offLive = null;
+onMounted(() => {
+  offLive = on("order.updated", (o) => {
+    if (!auth.isStudent) return;
+    if (o.status === "READY") {
+      toast.success(`Order ${o.code} is waiting at the counter. Show your pickup code.`, "Ready for pickup", { duration: 10000 });
+      try {
+        navigator.vibrate?.([200, 100, 200]);
+      } catch {
+        /* not supported */
+      }
+    } else if (o.status === "ACCEPTED") toast.info(`${o.code} was accepted. You'll get an alert when it's ready.`, "Order accepted");
+    else if (o.status === "CANCELLED" && route.name !== "order") toast.warning(`${o.code} was cancelled. Open it to see why.`, "Order cancelled");
+  });
+});
+onBeforeUnmount(() => offLive?.()); 
 
 const auth = useAuthStore();
 const cart = useCartStore();

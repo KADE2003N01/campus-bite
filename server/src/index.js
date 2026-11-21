@@ -10,6 +10,7 @@ import vendorRoutes from "./routes/vendor.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 import { sanitizeBody } from "./middleware/sanitize.js";
 import { UPLOAD_DIR } from "./middleware/upload.js";
+import { streamRouter } from "./realtime.js";
 
 dotenv.config();
 // Opening hours and pickup slots are local campus time.
@@ -52,6 +53,8 @@ app.get("/api/v1/health", (req, res) => res.json({ status: "ok" }));
 app.use("/api/v1/auth/login", authLimiter);
 app.use("/api/v1/auth/register", authLimiter);
 app.use("/api/v1/auth", authRoutes);
+// Long-lived push connection; not rate-limited per request
+app.use("/api/v1", streamRouter);
 app.use("/api/v1/vendor", apiLimiter, vendorRoutes);
 app.use("/api/v1", apiLimiter, catalogRoutes);
 // Student routes only see their own prefixes, so unknown paths 404 instead of 403.

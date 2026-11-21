@@ -30,8 +30,8 @@ export function useToast() {
     dismiss,
     show: (m, t, o) => push("info", m, t, o),
     info: (m, t, o) => push("info", m, t, o),
-    success: (m, t) => push("success", m, t),
-    warning: (m, t) => push("warning", m, t),
-    error: (m, t) => push("error", m, t),
+    success: (m, t, o) => push("success", m, t, o),
+    warning: (m, t, o) => push("warning", m, t, o),
+    error: (m, t, o) => push("error", m, t, o),
   };
 }

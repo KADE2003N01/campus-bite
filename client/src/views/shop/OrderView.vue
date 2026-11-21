@@ -4,6 +4,8 @@ import { useRoute, useRouter } from "vue-router";
 import api, { errMsg } from "../../composables/useApi.js";
 import { useToast } from "../../composables/useToast.js";
 import { usePolling } from "../../composables/usePolling.js";
+import { useLive } from "../../composables/useLive.js";
+import { useRealtime } from "../../composables/useRealtime.js";
 import { rwf, clock, when, minutesUntil, STATUS, PAYMENT } from "../../lib/format.js";
 import StatusPill from "../../components/ui/StatusPill.vue";
 import Stars from "../../components/ui/Stars.vue";
@@ -52,21 +54,21 @@ const headline = computed(() => {
   return "Waiting for the kitchen to accept";
 });
 
-let lastStatus = null;
 async function load() {
   try {
     const { data } = await api.get(`/orders/${route.params.id}`);
-    if (lastStatus && lastStatus !== data.status && data.status === "READY") toast.success(`${data.code} is ready for pickup`);
-    lastStatus = data.status;
     order.value = data;
     document.title = `${data.code} · ${STATUS[data.status].label}`;
   } catch (e) {
     error.value = e.response?.status === 404 ? "Order not found." : errMsg(e);
   }
 }
+const { connected } = useRealtime();
+// Instant: the server pushes every change to this order. Polling only covers a dropped connection.
+useLive(["order.updated"], (o) => (!o.id || o.id === order.value?.id) && load());
 usePolling(() => {
-  if (!order.value || isActive.value || needsPayment.value) load();
-}, 8000);
+  if (!order.value || ((isActive.value || needsPayment.value) && !connected.value)) load();
+}, 15000);
 
 async function pay() {
   paying.value = true;

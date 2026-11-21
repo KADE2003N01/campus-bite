@@ -5,6 +5,7 @@ import { useAuthStore } from "../stores/auth.js";
 import { useShopStore } from "../stores/shop.js";
 import { useToast } from "../composables/useToast.js";
 import { usePolling } from "../composables/usePolling.js";
+import { useLive } from "../composables/useLive.js";
 import api, { errMsg } from "../composables/useApi.js";
 import Logo from "../components/ui/Logo.vue";
 import { Menu as MenuIcon, X, ExternalLink, LogOut } from "lucide-vue-next";
@@ -84,7 +85,8 @@ async function pollOrders() {
     /* silent; next tick retries */
   }
 }
-usePolling(pollOrders, 15000);
+useLive(["order.created", "order.updated"], pollOrders);
+usePolling(pollOrders, 60000); // fallback if the live connection drops
 watch(() => route.path, pollOrders);
 router.afterEach(() => setTitle(shop.newOrders));
 

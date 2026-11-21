@@ -3,6 +3,10 @@ import { ref, computed, watch, onMounted, onBeforeUnmount } from "vue";
 import api, { errMsg } from "../../composables/useApi.js";
 import { useToast } from "../../composables/useToast.js";
 import { usePolling } from "../../composables/usePolling.js";
+import { useLive } from "../../composables/useLive.js";
+import { useRealtime } from "../../composables/useRealtime.js";
+
+const { connected } = useRealtime();
 import { useShopStore } from "../../stores/shop.js";
 import { rwf, num, when, PAYMENT } from "../../lib/format.js";
 import OrderCard from "../../components/vendor/OrderCard.vue";
@@ -40,7 +44,8 @@ async function loadBoard() {
     boardLoaded.value = true;
   }
 }
-usePolling(() => tab.value === "board" && loadBoard(), 10000);
+useLive(["order.created", "order.updated"], () => tab.value === "board" && loadBoard());
+usePolling(() => tab.value === "board" && !connected.value && loadBoard(), 10000);
 onMounted(() => (clockTimer = setInterval(() => (now.value = Date.now()), 30000)));
 onBeforeUnmount(() => clearInterval(clockTimer));
 
@@ -144,7 +149,8 @@ const itemsText = (o) => o.items.map((i) => `${i.quantity}× ${i.menu_item.name}
         <button class="rounded-md px-4 py-1.5 font-semibold" :class="tab === 'history' ? 'bg-ink text-paper' : 'text-ink-2'" @click="tab = 'history'">History</button>
       </div>
       <p v-if="tab === 'board'" class="flex items-center gap-2 text-xs text-muted">
-        <span class="h-1.5 w-1.5 animate-pulse rounded-full bg-forest" /> Updates every 10 seconds
+        <span class="h-1.5 w-1.5 rounded-full" :class="connected ? 'animate-pulse bg-[#15803d]' : 'bg-line-3'" />
+        {{ connected ? "Live: new orders appear instantly" : "Reconnecting… checking every 10 seconds" }}
       </p>
     </div>
 

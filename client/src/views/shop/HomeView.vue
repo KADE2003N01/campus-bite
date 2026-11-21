@@ -1,5 +1,6 @@
 <script setup>
 import { ref, computed, onMounted } from "vue";
+import { useLive } from "../../composables/useLive.js";
 import { useRouter } from "vue-router";
 import api, { errMsg } from "../../composables/useApi.js";
 import { useAuthStore } from "../../stores/auth.js";
@@ -60,6 +61,15 @@ const shown = computed(() => {
 function search() {
   if (q.value.trim()) router.push({ name: "search", query: { q: q.value.trim() } });
 }
+
+useLive(["order.updated"], async () => {
+  if (!auth.isStudent) return;
+  try {
+    active.value = (await api.get("/orders", { params: { scope: "active" } })).data;
+  } catch {
+    /* banner is optional */
+  }
+});
 
 onMounted(async () => {
   try {

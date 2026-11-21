@@ -1,5 +1,6 @@
 <script setup>
 import { ref, computed, onMounted } from "vue";
+import { useLive } from "../../composables/useLive.js";
 import api, { errMsg } from "../../composables/useApi.js";
 import { rwf, when, PAYMENT } from "../../lib/format.js";
 import StatusPill from "../../components/ui/StatusPill.vue";
@@ -17,6 +18,14 @@ const past = computed(() => orders.value.filter((o) => !ACTIVE.includes(o.status
 const list = computed(() => (tab.value === "active" ? active.value : past.value));
 const toReview = computed(() => past.value.filter((o) => o.status === "COMPLETED" && !o.review).length);
 const spent = computed(() => past.value.filter((o) => o.status === "COMPLETED").reduce((s, o) => s + o.total_amount, 0));
+
+useLive(["order.updated"], async () => {
+  try {
+    orders.value = (await api.get("/orders")).data;
+  } catch {
+    /* keep showing what we have */
+  }
+});
 
 onMounted(async () => {
   try {
