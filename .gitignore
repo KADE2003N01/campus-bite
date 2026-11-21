@@ -1,0 +1,14 @@
+node_modules/
+dist/
+.env
+*.log
+.DS_Store
+uploads/
+
+# Local tooling
+.claude/
+
+# Course material and the proposal (lecturer slides; proposal lists student IDs) — kept out of the public repo
+docs/*.pptx
+docs/*.pptm
+docs/*.pdf

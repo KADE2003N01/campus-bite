@@ -1,0 +1,186 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  STUDENT
+  VENDOR
+}
+
+model User {
+  id            Int        @id @default(autoincrement())
+  name          String
+  email         String     @unique
+  phone         String?
+  password_hash String
+  role          Role
+  created_at    DateTime   @default(now())
+  vendor        Vendor?
+  orders        Order[]
+  reviews       Review[]
+  favorites     Favorite[]
+}
+
+model Vendor {
+  id           Int        @id @default(autoincrement())
+  user_id      Int        @unique
+  user         User       @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  shop_name    String
+  description  String?
+  cuisine      String?
+  location     String
+  phone        String
+  is_open      Boolean    @default(false)
+  image_url    String?
+  cover_url    String?
+  opens_at     String     @default("07:00")
+  closes_at    String     @default("20:00")
+  prep_minutes Int        @default(15)
+  slot_capacity Int       @default(8)
+  rating_avg   Float      @default(0)
+  rating_count Int        @default(0)
+  created_at   DateTime   @default(now())
+  menu_items   MenuItem[]
+  orders       Order[]
+  reviews      Review[]
+  promos       Promo[]
+  favorites    Favorite[]
+}
+
+model MenuItem {
+  id           Int         @id @default(autoincrement())
+  vendor_id    Int
+  vendor       Vendor      @relation(fields: [vendor_id], references: [id], onDelete: Cascade)
+  name         String
+  description  String?
+  price        Int
+  category     String?
+  image_url    String?
+  is_available Boolean     @default(true)
+  is_archived  Boolean     @default(false)
+  created_at   DateTime    @default(now())
+  order_items  OrderItem[]
+
+  @@index([vendor_id])
+}
+
+enum OrderStatus {
+  SUBMITTED
+  ACCEPTED
+  PREPARING
+  READY
+  COMPLETED
+  CANCELLED
+}
+
+enum PaymentMethod {
+  MOMO
+  AIRTEL
+  CASH
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  REFUNDED
+}
+
+model Order {
+  id             Int           @id @default(autoincrement())
+  code           String        @unique
+  student_id     Int
+  student        User          @relation(fields: [student_id], references: [id])
+  vendor_id      Int
+  vendor         Vendor        @relation(fields: [vendor_id], references: [id])
+  status         OrderStatus   @default(SUBMITTED)
+  pickup_time    DateTime
+  subtotal       Int
+  discount       Int           @default(0)
+  total_amount   Int
+  promo_code     String?
+  payment_method PaymentMethod @default(CASH)
+  payment_status PaymentStatus @default(PENDING)
+  payment_phone  String?
+  note           String?
+  cancel_reason  String?
+  cancelled_by   Role?
+  checkout_seconds Int?
+  ease_rating    Int?
+  accepted_at    DateTime?
+  ready_at       DateTime?
+  completed_at   DateTime?
+  created_at     DateTime      @default(now())
+  updated_at     DateTime      @updatedAt
+  items          OrderItem[]
+  review         Review?
+
+  @@index([vendor_id, status])
+  @@index([student_id])
+}
+
+model OrderItem {
+  id           Int      @id @default(autoincrement())
+  order_id     Int
+  order        Order    @relation(fields: [order_id], references: [id], onDelete: Cascade)
+  menu_item_id Int
+  menu_item    MenuItem @relation(fields: [menu_item_id], references: [id])
+  quantity     Int
+  unit_price   Int
+  subtotal     Int
+}
+
+model Review {
+  id           Int           @id @default(autoincrement())
+  order_id     Int           @unique
+  order        Order         @relation(fields: [order_id], references: [id], onDelete: Cascade)
+  user_id      Int
+  user         User          @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  vendor_id    Int
+  vendor       Vendor        @relation(fields: [vendor_id], references: [id], onDelete: Cascade)
+  rating       Int
+  comment      String?
+  vendor_reply String?
+  replied_at   DateTime?
+  created_at   DateTime      @default(now())
+  photos       ReviewPhoto[]
+
+  @@index([vendor_id])
+}
+
+model ReviewPhoto {
+  id        Int    @id @default(autoincrement())
+  review_id Int
+  review    Review @relation(fields: [review_id], references: [id], onDelete: Cascade)
+  url       String
+}
+
+model Promo {
+  id          Int       @id @default(autoincrement())
+  vendor_id   Int
+  vendor      Vendor    @relation(fields: [vendor_id], references: [id], onDelete: Cascade)
+  code        String
+  percent_off Int
+  min_order   Int       @default(0)
+  max_uses    Int?
+  used_count  Int       @default(0)
+  expires_at  DateTime?
+  is_active   Boolean   @default(true)
+  created_at  DateTime  @default(now())
+
+  @@unique([vendor_id, code])
+}
+
+model Favorite {
+  user_id    Int
+  user       User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  vendor_id  Int
+  vendor     Vendor   @relation(fields: [vendor_id], references: [id], onDelete: Cascade)
+  created_at DateTime @default(now())
+
+  @@id([user_id, vendor_id])
+}
