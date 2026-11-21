@@ -1,7 +1,21 @@
 // Server-Sent Events hub: pushes order changes to the people involved the moment they happen.
 // In-memory, so it assumes a single API process (fine for this prototype).
 import { Router } from "express";
+import rateLimit from "express-rate-limit";
 import { authenticate } from "./middleware/auth.js";
+
+// Abuse limits: a few tabs per person, a ceiling for the whole server, and a cap on reconnect storms.
+const MAX_PER_USER = 5;
+const MAX_TOTAL = 2000;
+let total = 0;
+
+const connectLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 120,
+  message: { error: "Too many live connections opened, please wait a moment" },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
 
 const clients = new Map(); // userId -> Set<res>
 
@@ -31,7 +45,11 @@ export function orderEvent(order) {
 
 export const streamRouter = Router();
 
-streamRouter.get("/stream", authenticate, (req, res) => {
+streamRouter.get("/stream", connectLimiter, authenticate, (req, res) => {
+  if (total >= MAX_TOTAL) {
+    res.set("Retry-After", "30");
+    return res.status(503).json({ error: "Live updates are busy, falling back to refresh" });
+  }
   res.set({
     "Content-Type": "text/event-stream",
     "Cache-Control": "no-cache, no-transform",
@@ -44,13 +62,23 @@ streamRouter.get("/stream", authenticate, (req, res) => {
 
   const uid = req.user.id;
   if (!clients.has(uid)) clients.set(uid, new Set());
-  clients.get(uid).add(res);
+  const mine = clients.get(uid);
+  // Sets keep insertion order, so the first entry is the oldest connection
+  while (mine.size >= MAX_PER_USER) {
+    const oldest = mine.values().next().value;
+    mine.delete(oldest);
+    send(oldest, "replaced", {}); // tells that tab to stop reconnecting and fall back to polling
+    oldest.end();
+  }
+  mine.add(res);
+  total++;
 
   // keep proxies from closing an idle connection
   const ping = setInterval(() => res.write(": ping\n\n"), 25000);
   req.on("close", () => {
     clearInterval(ping);
-    clients.get(uid)?.delete(res);
+    if (clients.get(uid)?.delete(res)) total--;
+    else if (res.writableEnded) total--; // closed earlier as an "oldest" connection
     if (!clients.get(uid)?.size) clients.delete(uid);
   });
 });

@@ -8,6 +8,7 @@ let controller = null;
 let retryTimer = null;
 let attempt = 0;
 let currentToken = null;
+let replaced = false; // server closed us because this user opened too many tabs
 
 function emit(event, data) {
   for (const fn of listeners.get(event) || []) {
@@ -27,6 +28,7 @@ function parse(chunk) {
     else if (line.startsWith("data:")) data += line.slice(5).trim();
   }
   if (!data) return;
+  if (event === "replaced") replaced = true;
   try {
     emit(event, JSON.parse(data));
   } catch {
@@ -63,7 +65,7 @@ async function open(token) {
     if (e.name === "AbortError") return;
   }
   connected.value = false;
-  if (currentToken) {
+  if (currentToken && !replaced) {
     attempt++;
     const delay = Math.min(30000, 1000 * 2 ** Math.min(attempt, 5));
     retryTimer = setTimeout(() => currentToken && open(currentToken), delay);
@@ -75,6 +77,7 @@ export function start(token) {
   stop();
   currentToken = token;
   attempt = 0;
+  replaced = false;
   open(token);
 }
 
