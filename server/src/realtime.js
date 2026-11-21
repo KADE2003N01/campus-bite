@@ -6,9 +6,21 @@ import { authenticate } from "./middleware/auth.js";
 
 // Abuse limits: a few tabs per person, a ceiling for the whole server, and a cap on reconnect storms.
 const MAX_PER_USER = 5;
-const MAX_PER_IP = 30; // a shared campus Wi-Fi address can still serve many students
+// Server-wide ceiling, kept well below typical file-descriptor limits. Filling it would take
+// 2,000 accounts (5 each), and sign-ups are rate-limited, so one person can't starve others.
+const MAX_TOTAL = 10000;
 const MAX_LIFETIME_MS = 60 * 60 * 1000; // recycle after an hour; the browser reconnects by itself
-const perIp = new Map(); // ip -> open connection count
+let total = 0;
+
+// Loose per-address throttle that only runs before authentication (bad/missing tokens).
+// Students sharing campus Wi-Fi are never blocked by each other's open connections.
+const unauthLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 300,
+  skipSuccessfulRequests: true,
+  standardHeaders: true,
+  legacyHeaders: false,
+});
 
 // Keyed by user (runs after authenticate), so people behind one NAT don't share a bucket.
 const connectLimiter = rateLimit({
@@ -48,13 +60,12 @@ export function orderEvent(order) {
 
 export const streamRouter = Router();
 
-streamRouter.get("/stream", authenticate, connectLimiter, (req, res) => {
-  const ip = req.ip;
-  if ((perIp.get(ip) || 0) >= MAX_PER_IP) {
+streamRouter.get("/stream", unauthLimiter, authenticate, connectLimiter, (req, res) => {
+  if (total >= MAX_TOTAL) {
     res.set("Retry-After", "30");
-    return res.status(429).json({ error: "Too many live connections from this network, falling back to refresh" });
+    return res.status(503).json({ error: "Live updates are busy, falling back to refresh" });
   }
-  perIp.set(ip, (perIp.get(ip) || 0) + 1);
+  total++;
   res.set({
     "Content-Type": "text/event-stream",
     "Cache-Control": "no-cache, no-transform",
@@ -85,7 +96,6 @@ streamRouter.get("/stream", authenticate, connectLimiter, (req, res) => {
     clearTimeout(lifetime);
     clients.get(uid)?.delete(res);
     if (!clients.get(uid)?.size) clients.delete(uid);
-    const n = (perIp.get(ip) || 1) - 1;
-    n > 0 ? perIp.set(ip, n) : perIp.delete(ip);
+    total--;
   });
 });
