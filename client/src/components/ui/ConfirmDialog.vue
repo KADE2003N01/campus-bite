@@ -6,6 +6,7 @@ const props = defineProps({
   title: String,
   body: String,
   confirmLabel: { type: String, default: "Confirm" },
+  cancelLabel: { type: String, default: "Keep it" },
   danger: Boolean,
   reasons: Array, // when set, user must pick/enter a reason
   busy: Boolean,
@@ -34,7 +35,7 @@ function submit() {
       <input v-if="reason === '__other'" v-model="custom" class="field" placeholder="Short reason the customer will see" maxlength="200" />
     </div>
     <template #footer>
-      <button class="btn btn-ghost" @click="emit('close')">Keep it</button>
+      <button class="btn btn-ghost" @click="emit('close')">{{ cancelLabel }}</button>
       <button
         class="btn"
         :class="danger ? 'btn-hot' : 'btn-primary'"

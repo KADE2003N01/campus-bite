@@ -3,6 +3,7 @@ import { computed, watch } from "vue";
 import { useRoute } from "vue-router";
 import ShopLayout from "./layouts/ShopLayout.vue";
 import ToastStack from "./components/ui/ToastStack.vue";
+import ConfirmHost from "./components/ui/ConfirmHost.vue";
 import { useAuthStore } from "./stores/auth.js";
 import { start, stop } from "./composables/useRealtime.js";
 
@@ -23,4 +24,5 @@ const layout = computed(() => (route.matched.length ? route.meta.layout || "shop
   </ShopLayout>
   <RouterView v-else-if="layout" />
   <ToastStack />
+  <ConfirmHost />
 </template>

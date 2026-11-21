@@ -254,7 +254,7 @@ Each person can have up to 5 live connections, such as tabs, at once. Opening a 
 
 ### 7.6 Screenshots of the full flow
 
-[`docs/screenshots/order-flow/`](docs/screenshots/order-flow/README.md) has 24 screenshots from recorded runs. They follow one order from the first visit to the vendor completing it, then show Kinyarwanda reviews, each toast type, and live updates arriving instantly.
+[`docs/screenshots/order-flow/`](docs/screenshots/order-flow/README.md) has 25 screenshots from recorded runs. They follow one order from the first visit to the vendor completing it, then show Kinyarwanda reviews, each toast type, and live updates arriving instantly.
 
 ## 8. Troubleshooting
 
@@ -328,6 +328,7 @@ Human-centred choices:
 - AA contrast, and `prefers-reduced-motion` support
 - first-visit guidance
 - a reason required before cancelling
+- in-app confirmation dialogs instead of browser popups
 - the basket survives interruptions
 - recovery when a pickup slot fills up
 

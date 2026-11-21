@@ -5,6 +5,7 @@ import api, { errMsg } from "../../composables/useApi.js";
 import { useCartStore } from "../../stores/cart.js";
 import { useAuthStore } from "../../stores/auth.js";
 import { useToast } from "../../composables/useToast.js";
+import { confirmDialog } from "../../composables/useConfirm.js";
 import { rwf } from "../../lib/format.js";
 import FoodImage from "../../components/ui/FoodImage.vue";
 
@@ -75,7 +76,15 @@ async function add(item) {
   if (!item.vendor.is_open) return toast.warning(`${item.vendor.shop_name} isn't taking orders right now. Try another shop.`, "Shop closed");
   try {
     const { data } = await api.get(`/vendors/${item.vendor.id}`);
-    if (!cart.canAdd(data.vendor) && !confirm(`Your basket has items from ${cart.vendor.shop_name}. Clear it and add this?`)) return;
+    if (!cart.canAdd(data.vendor)) {
+      const ok = await confirmDialog({
+        title: "Start a new basket?",
+        body: `Your basket has ${cart.itemCount} item${cart.itemCount > 1 ? "s" : ""} from ${cart.vendor.shop_name}. Each order goes to one shop, so adding ${item.name} from ${data.vendor.shop_name} will clear it.`,
+        confirmLabel: "Start new basket",
+        cancelLabel: "Keep my basket",
+      });
+      if (!ok) return;
+    }
     cart.addItem(item, data.vendor);
     toast.success(`${item.name} is in your basket.`, "Added to basket");
   } catch (e) {

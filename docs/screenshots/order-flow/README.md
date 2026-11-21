@@ -28,3 +28,4 @@ Captured automatically in headless Chrome (1366×900) against the running app wi
 | 22 | All four toast types (success, error, warning, info) | — |
 | 23 | Live: new order appears on the vendor board instantly (~0.1 s) | Vendor |
 | 24 | Live: "Ready for pickup" alert reaches the student on another page | Student |
+| 25 | In-app confirmation (no browser popups) when adding from a different shop | Student |

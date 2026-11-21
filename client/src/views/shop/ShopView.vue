@@ -314,8 +314,9 @@ watch(() => route.params.id, (id) => id && load(), { immediate: true });
     <ConfirmDialog
       :open="!!conflict"
       title="Start a new basket?"
-      :body="`Your basket has items from ${cart.vendor?.shop_name}. Orders go to one shop at a time, so adding this will clear it.`"
-      confirm-label="Clear and add"
+      :body="`Your basket has ${cart.itemCount} item${cart.itemCount > 1 ? 's' : ''} from ${cart.vendor?.shop_name}. Each order goes to one shop, so adding ${conflict?.name} will clear it.`"
+      confirm-label="Start new basket"
+      cancel-label="Keep my basket"
       @close="conflict = null"
       @confirm="replaceBasket"
     />
