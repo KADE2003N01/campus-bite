@@ -250,7 +250,7 @@ Order changes are pushed to the browser the moment they happen, using **Server-S
 
 **To see it:** open the student and vendor windows side by side and click **Mark ready**.
 
-Each person can have up to 5 live connections, such as tabs, at once. Opening a sixth closes the oldest, and that tab falls back to periodic refresh. New connections are rate-limited per user, the server has an overall ceiling, and each connection is recycled after an hour (the browser reconnects automatically). Events are held in memory, so this assumes one API process. Running several instances would need a shared channel such as Redis pub/sub or PostgreSQL `LISTEN/NOTIFY`.
+Each person can have up to 5 live connections, such as tabs, at once. Opening a sixth closes their own oldest, and that tab falls back to periodic refresh. Limits only ever affect the source that hit them: a network address over its share loses its own oldest connection, and if the whole server is full, new connections are refused and fall back to refresh. New connections are rate-limited per user, and each connection is recycled after an hour (the browser reconnects automatically). Events are held in memory, so this assumes one API process. Running several instances would need a shared channel such as Redis pub/sub or PostgreSQL `LISTEN/NOTIFY`.
 
 ### 7.6 Screenshots of the full flow
 

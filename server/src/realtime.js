@@ -4,32 +4,20 @@ import { Router } from "express";
 import rateLimit from "express-rate-limit";
 import { authenticate } from "./middleware/auth.js";
 
-// Abuse limits: a few tabs per person, a ceiling for the whole server, and a cap on reconnect storms.
+// ── Limits ─────────────────────────────────────────────────
+// Each limit only ever affects the source that hit it: a user's 6th tab replaces that user's
+// oldest tab, an address over its share replaces that address's oldest connection, and when the
+// whole server is full new connections are refused (browsers fall back to periodic refresh).
 const MAX_PER_USER = 5;
-// Server-wide ceiling, kept well below typical file-descriptor limits. Filling it would take
-// 2,000 accounts (5 each), and sign-ups are rate-limited, so one person can't starve others.
-const MAX_TOTAL = 10000;
-// Soft per-address share: generous for campus NAT, but no single source can fill the pool.
-const MAX_PER_IP = 200;
-const MAX_LIFETIME_MS = 60 * 60 * 1000; // recycle after an hour; the browser reconnects by itself
+const MAX_PER_IP = 200; // generous: many students share one campus Wi-Fi address
+const MAX_TOTAL = 10000; // well below typical file-descriptor limits
+const MAX_LIFETIME_MS = 60 * 60 * 1000; // recycle hourly; the browser reconnects by itself
+
+const byUser = new Map(); // userId -> Set<conn>   (Set keeps insertion order: oldest first)
+const byIp = new Map(); // ip -> Set<conn>
 let total = 0;
-const byIp = new Map(); // ip -> Set<res> (insertion order = oldest first)
 
-/** Close the oldest connection of the address holding the most connections. */
-function evictFromHeaviest(preferIp) {
-  let ip = preferIp;
-  if (!ip) {
-    let max = 0;
-    for (const [k, set] of byIp) if (set.size > max) { max = set.size; ip = k; }
-  }
-  const oldest = byIp.get(ip)?.values().next().value;
-  if (!oldest) return;
-  send(oldest, "replaced", {}); // that tab falls back to periodic refresh
-  oldest.end();
-}
-
-// Loose per-address throttle that only runs before authentication (bad/missing tokens).
-// Students sharing campus Wi-Fi are never blocked by each other's open connections.
+// Loose per-address throttle that only counts failed (unauthenticated) attempts.
 const unauthLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 300,
@@ -48,16 +36,49 @@ const connectLimiter = rateLimit({
   legacyHeaders: false,
 });
 
-const clients = new Map(); // userId -> Set<res>
+// ── Connection bookkeeping ─────────────────────────────────
+function write(conn, chunk) {
+  if (conn.closed || conn.res.writableEnded || conn.res.destroyed) return;
+  try {
+    conn.res.write(chunk);
+  } catch {
+    release(conn);
+  }
+}
 
-function send(res, event, data) {
-  res.write(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`);
+function send(conn, event, data) {
+  write(conn, `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`);
+}
+
+function removeFrom(map, key, conn) {
+  const set = map.get(key);
+  if (!set) return;
+  set.delete(conn);
+  if (!set.size) map.delete(key);
+}
+
+/** Idempotent: unregisters the connection everywhere and ends the response. */
+function release(conn, reason) {
+  if (conn.closed) return;
+  if (reason) send(conn, reason, {}); // e.g. "replaced": the tab stops reconnecting and polls instead
+  conn.closed = true;
+  clearInterval(conn.ping);
+  clearTimeout(conn.lifetime);
+  removeFrom(byUser, conn.uid, conn);
+  removeFrom(byIp, conn.ip, conn);
+  total--;
+  if (!conn.res.writableEnded) conn.res.end();
+}
+
+function oldest(set) {
+  for (const c of set || []) if (!c.closed) return c;
+  return null;
 }
 
 /** Push an event to every open connection of the given user ids. */
 export function notify(userIds, event, data) {
   for (const id of new Set(userIds.filter(Boolean))) {
-    for (const res of clients.get(id) || []) send(res, event, data);
+    for (const conn of [...(byUser.get(id) || [])]) send(conn, event, data);
   }
 }
 
@@ -77,13 +98,18 @@ export function orderEvent(order) {
 export const streamRouter = Router();
 
 streamRouter.get("/stream", unauthLimiter, authenticate, connectLimiter, (req, res) => {
-  // New users are always admitted; pressure is relieved by trimming the heaviest source instead.
+  const uid = req.user.id;
   const ip = req.ip;
-  if ((byIp.get(ip)?.size || 0) >= MAX_PER_IP) evictFromHeaviest(ip);
-  else if (total >= MAX_TOTAL) evictFromHeaviest();
-  total++;
-  if (!byIp.has(ip)) byIp.set(ip, new Set());
-  byIp.get(ip).add(res);
+
+  // Make room only from this user's / this address's own connections.
+  while ((byUser.get(uid)?.size || 0) >= MAX_PER_USER) release(oldest(byUser.get(uid)), "replaced");
+  while ((byIp.get(ip)?.size || 0) >= MAX_PER_IP) release(oldest(byIp.get(ip)), "replaced");
+
+  if (total >= MAX_TOTAL) {
+    res.set("Retry-After", "60");
+    return res.status(503).json({ error: "Live updates are busy, falling back to refresh" });
+  }
+
   res.set({
     "Content-Type": "text/event-stream",
     "Cache-Control": "no-cache, no-transform",
@@ -91,31 +117,19 @@ streamRouter.get("/stream", unauthLimiter, authenticate, connectLimiter, (req, r
     "X-Accel-Buffering": "no",
   });
   res.flushHeaders();
-  res.write("retry: 3000\n\n");
-  send(res, "ready", { user_id: req.user.id });
+  res.on("error", () => {}); // a broken socket must never crash the process
 
-  const uid = req.user.id;
-  if (!clients.has(uid)) clients.set(uid, new Set());
-  const mine = clients.get(uid);
-  // Sets keep insertion order, so the first entry is the oldest connection
-  while (mine.size >= MAX_PER_USER) {
-    const oldest = mine.values().next().value;
-    mine.delete(oldest);
-    send(oldest, "replaced", {}); // tells that tab to stop reconnecting and fall back to polling
-    oldest.end();
+  const conn = { uid, ip, res, closed: false };
+  for (const [map, key] of [[byUser, uid], [byIp, ip]]) {
+    if (!map.has(key)) map.set(key, new Set());
+    map.get(key).add(conn);
   }
-  mine.add(res);
+  total++;
 
-  // keep proxies from closing an idle connection
-  const ping = setInterval(() => res.write(": ping\n\n"), 25000);
-  const lifetime = setTimeout(() => res.end(), MAX_LIFETIME_MS);
-  req.on("close", () => {
-    clearInterval(ping);
-    clearTimeout(lifetime);
-    clients.get(uid)?.delete(res);
-    if (!clients.get(uid)?.size) clients.delete(uid);
-    total--;
-    byIp.get(ip)?.delete(res);
-    if (!byIp.get(ip)?.size) byIp.delete(ip);
-  });
+  write(conn, "retry: 3000\n\n");
+  send(conn, "ready", { user_id: uid });
+
+  conn.ping = setInterval(() => write(conn, ": ping\n\n"), 25000); // keeps proxies from closing idle streams
+  conn.lifetime = setTimeout(() => release(conn), MAX_LIFETIME_MS);
+  req.on("close", () => release(conn));
 });
