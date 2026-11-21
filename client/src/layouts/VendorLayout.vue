@@ -113,7 +113,7 @@ function logout() {
 <template>
   <div class="min-h-screen bg-paper">
     <!-- Mobile top bar -->
-    <header class="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-[#5e5e5e] bg-ink px-4 text-paper lg:hidden">
+    <header class="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-[#5e5e5e] bg-ink-2 px-4 text-paper lg:hidden">
       <button class="-ml-2 rounded-md p-2 hover:bg-white/10" aria-label="Open menu" @click="drawer = true">
         <MenuIcon class="h-5 w-5" />
       </button>
@@ -131,7 +131,7 @@ function logout() {
 
     <!-- Sidebar -->
     <aside
-      class="fixed inset-y-0 left-0 z-50 flex w-64 flex-col bg-ink text-paper transition-transform duration-200 lg:translate-x-0"
+      class="fixed inset-y-0 left-0 z-50 flex w-64 flex-col bg-ink-2 text-paper transition-transform duration-200 lg:translate-x-0"
       :class="drawer ? 'translate-x-0' : '-translate-x-full'"
     >
       <div class="flex items-center justify-between px-5 pb-4 pt-5">

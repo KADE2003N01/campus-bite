@@ -9,8 +9,24 @@ const MAX_PER_USER = 5;
 // Server-wide ceiling, kept well below typical file-descriptor limits. Filling it would take
 // 2,000 accounts (5 each), and sign-ups are rate-limited, so one person can't starve others.
 const MAX_TOTAL = 10000;
+// Soft per-address share: generous for campus NAT, but no single source can fill the pool.
+const MAX_PER_IP = 200;
 const MAX_LIFETIME_MS = 60 * 60 * 1000; // recycle after an hour; the browser reconnects by itself
 let total = 0;
+const byIp = new Map(); // ip -> Set<res> (insertion order = oldest first)
+
+/** Close the oldest connection of the address holding the most connections. */
+function evictFromHeaviest(preferIp) {
+  let ip = preferIp;
+  if (!ip) {
+    let max = 0;
+    for (const [k, set] of byIp) if (set.size > max) { max = set.size; ip = k; }
+  }
+  const oldest = byIp.get(ip)?.values().next().value;
+  if (!oldest) return;
+  send(oldest, "replaced", {}); // that tab falls back to periodic refresh
+  oldest.end();
+}
 
 // Loose per-address throttle that only runs before authentication (bad/missing tokens).
 // Students sharing campus Wi-Fi are never blocked by each other's open connections.
@@ -61,11 +77,13 @@ export function orderEvent(order) {
 export const streamRouter = Router();
 
 streamRouter.get("/stream", unauthLimiter, authenticate, connectLimiter, (req, res) => {
-  if (total >= MAX_TOTAL) {
-    res.set("Retry-After", "30");
-    return res.status(503).json({ error: "Live updates are busy, falling back to refresh" });
-  }
+  // New users are always admitted; pressure is relieved by trimming the heaviest source instead.
+  const ip = req.ip;
+  if ((byIp.get(ip)?.size || 0) >= MAX_PER_IP) evictFromHeaviest(ip);
+  else if (total >= MAX_TOTAL) evictFromHeaviest();
   total++;
+  if (!byIp.has(ip)) byIp.set(ip, new Set());
+  byIp.get(ip).add(res);
   res.set({
     "Content-Type": "text/event-stream",
     "Cache-Control": "no-cache, no-transform",
@@ -97,5 +115,7 @@ streamRouter.get("/stream", unauthLimiter, authenticate, connectLimiter, (req, r
     clients.get(uid)?.delete(res);
     if (!clients.get(uid)?.size) clients.delete(uid);
     total--;
+    byIp.get(ip)?.delete(res);
+    if (!byIp.get(ip)?.size) byIp.delete(ip);
   });
 });

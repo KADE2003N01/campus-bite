@@ -3,7 +3,7 @@ import { ref, computed } from "vue";
 const props = defineProps({
   src: String,
   alt: { type: String, default: "" },
-  rounded: { type: String, default: "rounded-lg" },
+  rounded: { type: String, default: "rounded-xl" },
   eager: Boolean,
 });
 const failed = ref(false);

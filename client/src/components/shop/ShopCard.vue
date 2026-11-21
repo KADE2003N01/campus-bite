@@ -11,7 +11,7 @@ const live = computed(() => v.value.is_open && withinHours(v.value));
 
 <template>
   <RouterLink :to="`/shops/${v.id}`" class="group block min-w-0">
-    <FoodImage :src="v.cover_url" :alt="v.shop_name" class="aspect-[16/10] text-4xl" rounded="rounded-[10px]">
+    <FoodImage :src="v.cover_url" :alt="v.shop_name" class="aspect-[16/10] text-4xl" rounded="rounded-2xl">
       <div class="absolute right-2.5 top-2.5"><FavButton :vendor-id="v.id" :value="v.is_favorite" overlay /></div>
       <div v-if="!live" class="absolute inset-0 flex items-end bg-ink/45 p-3">
         <span class="tag bg-card text-ink">{{ v.is_open ? `Opens ${v.opens_at}` : "Not taking orders" }}</span>

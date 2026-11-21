@@ -34,7 +34,7 @@ Food pre-ordering for the UR-CST campus. Students browse stalls, compare dishes,
 | PostgreSQL | 14 or newer | `psql --version` |
 | Git | any | `git --version` |
 
-You also need an internet connection in the browser: the demo food photos and fonts load from Unsplash and Google Fonts.
+You also need an internet connection in the browser for the demo food photos, which load from Unsplash. Fonts are bundled with the app.
 
 ## 2. Get the code
 
@@ -317,6 +317,8 @@ The brief is `E-commerce_Project_.pdf`, the group's proposal.
 | Evaluation: time to order, ease of use (§2.10) | Checkout time recorded per order, one-tap "how easy was it?" after ordering, live figures on `/about` |
 
 ### Design
+
+Typeface: Plus Jakarta Sans for text and headings, IBM Plex Mono for order codes. Both are bundled with the app, so nothing is requested from Google Fonts.
 
 Colour palette: `#4A4A4A` charcoal (text, primary actions, vendor sidebar), `#CBCBCB` silver (controls, empty states), `#FFFFE3` cream (background) and `#6D8196` slate (brand accent). Text and buttons use a slightly deeper slate (`#56697E`) where white-on-slate would fail WCAG AA contrast. Toasts use the usual green / red / amber / blue so their meaning is instant.
 

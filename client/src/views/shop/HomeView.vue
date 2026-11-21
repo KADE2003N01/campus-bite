@@ -132,9 +132,9 @@ onMounted(async () => {
 
         <div class="relative hidden lg:block">
           <div class="grid grid-cols-5 grid-rows-2 gap-3">
-            <img src="https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=900&q=72&auto=format&fit=crop" alt="Grilled brochettes" class="col-span-3 row-span-2 h-[340px] w-full rounded-[10px] object-cover" />
-            <img src="https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=500&q=72&auto=format&fit=crop" alt="Cappuccinos" class="col-span-2 h-[164px] w-full rounded-[10px] object-cover" />
-            <img src="https://images.unsplash.com/photo-1601050690597-df0568f70950?w=500&q=72&auto=format&fit=crop" alt="Samosas" class="col-span-2 h-[164px] w-full rounded-[10px] object-cover" />
+            <img src="https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=900&q=72&auto=format&fit=crop" alt="Grilled brochettes" class="col-span-3 row-span-2 h-[340px] w-full rounded-2xl object-cover" />
+            <img src="https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=500&q=72&auto=format&fit=crop" alt="Cappuccinos" class="col-span-2 h-[164px] w-full rounded-2xl object-cover" />
+            <img src="https://images.unsplash.com/photo-1601050690597-df0568f70950?w=500&q=72&auto=format&fit=crop" alt="Samosas" class="col-span-2 h-[164px] w-full rounded-2xl object-cover" />
           </div>
           <div v-if="!loading" class="absolute -bottom-5 left-5 rounded-lg bg-card shadow-[var(--shadow-card)] px-4 py-3 shadow-[0_10px_30px_-15px_rgba(0,0,0,0.4)]">
             <p class="num display text-2xl font-semibold leading-none">{{ liveCount }} <span class="text-base font-normal text-muted">of {{ vendors.length }}</span></p>

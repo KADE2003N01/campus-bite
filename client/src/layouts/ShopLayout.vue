@@ -58,7 +58,7 @@ const isActive = (l) => (l.exact ? route.path === l.to : route.path.startsWith(l
 
 <template>
   <div class="flex min-h-screen flex-col">
-    <header class="sticky top-0 z-40 border-b border-line bg-paper">
+    <header class="sticky top-0 z-40 border-b border-line bg-white">
       <div class="mx-auto flex h-16 max-w-6xl items-center gap-4 px-4 sm:px-6">
         <RouterLink to="/" class="shrink-0" aria-label="CampusBite home"><Logo /></RouterLink>
 
