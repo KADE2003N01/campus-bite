@@ -13,7 +13,7 @@ const live = computed(() => v.value.is_open && withinHours(v.value));
   <RouterLink :to="`/shops/${v.id}`" class="group block min-w-0">
     <FoodImage :src="v.cover_url" :alt="v.shop_name" class="aspect-[16/10] text-4xl" rounded="rounded-2xl">
       <div class="absolute right-2.5 top-2.5"><FavButton :vendor-id="v.id" :value="v.is_favorite" overlay /></div>
-      <div v-if="!live" class="absolute inset-0 flex items-end bg-ink/45 p-3">
+      <div v-if="!live" class="absolute inset-0 flex items-end bg-black/50 p-3">
         <span class="tag bg-card text-ink">{{ v.is_open ? `Opens ${v.opens_at}` : "Not taking orders" }}</span>
       </div>
     </FoodImage>
@@ -23,7 +23,7 @@ const live = computed(() => v.value.is_open && withinHours(v.value));
         <p class="truncate text-sm text-muted">{{ v.cuisine }} · {{ v.location }}</p>
       </div>
       <div v-if="v.rating_count" class="flex shrink-0 items-center gap-1 rounded-md bg-paper-2 px-2 py-1 text-sm font-semibold">
-        <svg width="12" height="12" viewBox="0 0 20 20"><path fill="#4A4A4A" d="M10 1.5l2.6 5.5 6 .8-4.4 4.1 1.1 5.9L10 15l-5.3 2.8 1.1-5.9L1.4 7.8l6-.8z" /></svg>
+        <svg width="12" height="12" viewBox="0 0 20 20"><path style="fill: var(--color-star)" d="M10 1.5l2.6 5.5 6 .8-4.4 4.1 1.1 5.9L10 15l-5.3 2.8 1.1-5.9L1.4 7.8l6-.8z" /></svg>
         <span class="num">{{ v.rating_avg.toFixed(1) }}</span>
       </div>
     </div>

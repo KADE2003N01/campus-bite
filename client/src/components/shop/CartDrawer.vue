@@ -22,7 +22,7 @@ function checkout() {
 <template>
   <Teleport to="body">
     <Transition name="fade">
-      <div v-if="cart.open" class="fixed inset-0 z-50 bg-ink/40" @click="cart.open = false" />
+      <div v-if="cart.open" class="fixed inset-0 z-50 bg-black/50" @click="cart.open = false" />
     </Transition>
     <Transition name="slide">
       <aside v-if="cart.open" class="fixed inset-y-0 right-0 z-50 flex w-full max-w-[400px] flex-col bg-card shadow-2xl" aria-label="Basket">

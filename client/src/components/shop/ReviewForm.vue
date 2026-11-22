@@ -75,7 +75,7 @@ async function submit() {
     <div class="flex flex-wrap gap-2">
       <div v-for="(f, i) in files" :key="f.url" class="relative h-20 w-20 overflow-hidden rounded-md">
         <img :src="f.url" class="h-full w-full object-cover" alt="" />
-        <button class="absolute right-1 top-1 rounded-full bg-ink/80 p-1 text-white" aria-label="Remove photo" @click="drop(i)">
+        <button class="absolute right-1 top-1 rounded-full bg-black/75 p-1 text-white" aria-label="Remove photo" @click="drop(i)">
           <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M6 6l12 12M18 6L6 18" /></svg>
         </button>
       </div>

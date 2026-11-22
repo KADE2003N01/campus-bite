@@ -24,7 +24,7 @@ onBeforeUnmount(() => {
 <template>
   <Teleport to="body">
     <Transition name="fade">
-      <div v-if="open" class="fixed inset-0 z-[60] flex items-end justify-center bg-ink/45 sm:items-center sm:p-6" @mousedown.self="emit('close')">
+      <div v-if="open" class="fixed inset-0 z-[60] flex items-end justify-center bg-black/55 sm:items-center sm:p-6" @mousedown.self="emit('close')">
         <div class="flex max-h-[92vh] w-full flex-col rounded-t-2xl bg-card shadow-2xl sm:rounded-xl" :class="width" role="dialog" :aria-label="title">
           <header v-if="title" class="flex items-center justify-between gap-4 border-b border-line px-5 py-4">
             <h2 class="display text-xl font-semibold">{{ title }}</h2>

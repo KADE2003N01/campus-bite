@@ -17,11 +17,13 @@ const mins = computed(() => {
   void props.now;
   return minutesUntil(props.order.pickup_time);
 });
+// "in 25 min", "in 1 h 10", "8 min late", "2 h late"
+const span = (m) => (m < 60 ? `${m} min` : `${Math.floor(m / 60)} h${m % 60 && m < 600 ? ` ${m % 60}` : ""}`);
 const countdown = computed(() => {
   const m = mins.value;
-  if (m > 0) return `in ${m} min`;
+  if (m > 0) return `in ${span(m)}`;
   if (m === 0) return "now";
-  return `${-m} min late`;
+  return `${span(-m)} late`;
 });
 const paid = computed(() => props.order.payment_status === "PAID");
 </script>

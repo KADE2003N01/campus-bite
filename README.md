@@ -254,7 +254,7 @@ Each person can have up to 5 live connections, such as tabs, at once. Opening a 
 
 ### 7.6 Screenshots of the full flow
 
-[`docs/screenshots/order-flow/`](docs/screenshots/order-flow/README.md) has 25 screenshots from recorded runs. They follow one order from the first visit to the vendor completing it, then show Kinyarwanda reviews, each toast type, and live updates arriving instantly.
+[`docs/screenshots/order-flow/`](docs/screenshots/order-flow/README.md) has 27 screenshots from recorded runs. They follow one order from the first visit to the vendor completing it, then show Kinyarwanda reviews, each toast type, and live updates arriving instantly.
 
 ## 8. Troubleshooting
 
@@ -320,6 +320,13 @@ The brief is `E-commerce_Project_.pdf`, the group's proposal.
 
 Typeface: Plus Jakarta Sans for text and headings, IBM Plex Mono for order codes. Both are bundled with the app, so nothing is requested from Google Fonts.
 
+**Dark mode.** The moon/sun button sits in the storefront header, and *Dark mode* is in the vendor sidebar. It starts from the device's light/dark setting, then remembers your choice. The dark theme uses the same palette inverted:
+- background: deep charcoal
+- cards: the `#4A4A4A` family
+- text: cream `#FFFFE3`
+- lines and secondary text: the silver family
+- accent: slate
+
 Colour palette: `#4A4A4A` charcoal (text, primary actions, vendor sidebar), `#CBCBCB` silver (controls, empty states), `#FFFFE3` cream (background) and `#6D8196` slate (brand accent). Text and buttons use a slightly deeper slate (`#56697E`) where white-on-slate would fail WCAG AA contrast. Toasts use the usual green / red / amber / blue so their meaning is instant.
 
 Human-centred choices:
@@ -329,6 +336,7 @@ Human-centred choices:
 - first-visit guidance
 - a reason required before cancelling
 - in-app confirmation dialogs instead of browser popups
+- light and dark themes that follow the device setting
 - the basket survives interruptions
 - recovery when a pickup slot fills up
 

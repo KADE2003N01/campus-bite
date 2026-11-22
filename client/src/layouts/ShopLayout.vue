@@ -5,6 +5,7 @@ import { useAuthStore } from "../stores/auth.js";
 import { useCartStore } from "../stores/cart.js";
 import Logo from "../components/ui/Logo.vue";
 import CartDrawer from "../components/shop/CartDrawer.vue";
+import ThemeToggle from "../components/ui/ThemeToggle.vue";
 import { onMounted, onBeforeUnmount } from "vue";
 import { on } from "../composables/useRealtime.js";
 import { useToast } from "../composables/useToast.js";
@@ -58,7 +59,7 @@ const isActive = (l) => (l.exact ? route.path === l.to : route.path.startsWith(l
 
 <template>
   <div class="flex min-h-screen flex-col">
-    <header class="sticky top-0 z-40 border-b border-line bg-white">
+    <header class="sticky top-0 z-40 border-b border-line bg-card">
       <div class="mx-auto flex h-16 max-w-6xl items-center gap-4 px-4 sm:px-6">
         <RouterLink to="/" class="shrink-0" aria-label="CampusBite home"><Logo /></RouterLink>
 
@@ -84,6 +85,8 @@ const isActive = (l) => (l.exact ? route.path === l.to : route.path.startsWith(l
             <RouterLink to="/orders" class="btn btn-ghost btn-sm hidden sm:inline-flex">Orders</RouterLink>
             <RouterLink to="/saved" class="btn btn-ghost btn-sm hidden sm:inline-flex">Saved</RouterLink>
           </template>
+
+          <ThemeToggle class="text-ink-2" />
 
           <button
             v-if="!auth.isVendor"

@@ -8,6 +8,7 @@ import { usePolling } from "../composables/usePolling.js";
 import { useLive } from "../composables/useLive.js";
 import api, { errMsg } from "../composables/useApi.js";
 import Logo from "../components/ui/Logo.vue";
+import ThemeToggle from "../components/ui/ThemeToggle.vue";
 import { Menu as MenuIcon, X, ExternalLink, LogOut } from "lucide-vue-next";
 
 const auth = useAuthStore();
@@ -113,7 +114,7 @@ function logout() {
 <template>
   <div class="min-h-screen bg-paper">
     <!-- Mobile top bar -->
-    <header class="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-[#5e5e5e] bg-ink-2 px-4 text-paper lg:hidden">
+    <header class="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-side-line bg-side px-4 text-side-ink lg:hidden">
       <button class="-ml-2 rounded-md p-2 hover:bg-white/10" aria-label="Open menu" @click="drawer = true">
         <MenuIcon class="h-5 w-5" />
       </button>
@@ -131,22 +132,22 @@ function logout() {
 
     <!-- Sidebar -->
     <aside
-      class="fixed inset-y-0 left-0 z-50 flex w-64 flex-col bg-ink-2 text-paper transition-transform duration-200 lg:translate-x-0"
+      class="fixed inset-y-0 left-0 z-50 flex w-64 flex-col bg-side text-side-ink transition-transform duration-200 lg:translate-x-0"
       :class="drawer ? 'translate-x-0' : '-translate-x-full'"
     >
       <div class="flex items-center justify-between px-5 pb-4 pt-5">
         <Logo light />
-        <button class="rounded-md p-1.5 text-paper/75 hover:bg-white/10 lg:hidden" aria-label="Close menu" @click="drawer = false">
+        <button class="rounded-md p-1.5 text-side-ink/75 hover:bg-white/10 lg:hidden" aria-label="Close menu" @click="drawer = false">
           <X class="h-4 w-4" />
         </button>
       </div>
 
-      <div class="mx-3 rounded-lg border border-[#5e5e5e] bg-[#3e3e3e] p-3">
+      <div class="mx-3 rounded-lg border border-side-line bg-side-panel p-3">
         <p class="truncate text-sm font-semibold">{{ shop.profile?.shop_name }}</p>
-        <p class="truncate text-xs text-paper/75">{{ shop.profile?.cuisine || "Food vendor" }} · {{ shop.profile?.opens_at }}–{{ shop.profile?.closes_at }}</p>
+        <p class="truncate text-xs text-side-ink/75">{{ shop.profile?.cuisine || "Food vendor" }} · {{ shop.profile?.opens_at }}–{{ shop.profile?.closes_at }}</p>
         <button
           class="mt-3 flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-sm font-semibold transition"
-          :class="shop.profile?.is_open ? 'bg-forest-2 text-white hover:bg-forest' : 'bg-[#5e5e5e] text-paper hover:bg-[#666666]'"
+          :class="shop.profile?.is_open ? 'bg-forest-2 text-white hover:bg-forest' : 'bg-side-line text-side-ink hover:bg-white/10'"
           :disabled="toggling"
           @click="toggleOpen"
         >
@@ -161,43 +162,44 @@ function logout() {
       </div>
 
       <nav class="mt-5 flex-1 space-y-0.5 overflow-y-auto px-3">
-        <p class="px-3 pb-1.5 text-[0.68rem] font-semibold uppercase tracking-[0.08em] text-paper/70">Workspace</p>
+        <p class="px-3 pb-1.5 text-[0.68rem] font-semibold uppercase tracking-[0.08em] text-side-ink/70">Workspace</p>
         <RouterLink
           v-for="item in nav"
           :key="item.to"
           :to="item.to"
           class="flex items-center justify-between rounded-md px-3 py-2 text-sm transition"
-          :class="isActive(item) ? 'bg-paper text-ink font-semibold' : 'text-paper/75 hover:bg-white/5 hover:text-paper'"
+          :class="isActive(item) ? 'bg-side-ink text-side font-semibold' : 'text-side-ink/75 hover:bg-white/5 hover:text-side-ink'"
         >
           {{ item.label }}
           <span
             v-if="item.badge"
             class="num min-w-[1.4rem] rounded px-1.5 text-center text-xs font-bold leading-5"
-            :class="item.hot ? 'bg-chili text-white' : isActive(item) ? 'bg-ink text-paper' : 'bg-white/15 text-paper'"
+            :class="item.hot ? 'bg-chili text-white' : isActive(item) ? 'bg-side text-side-ink' : 'bg-white/15 text-side-ink'"
           >{{ item.badge }}</span>
         </RouterLink>
       </nav>
 
-      <div class="border-t border-[#5e5e5e] p-3">
-        <label class="flex cursor-pointer items-center justify-between rounded-md px-3 py-2 text-sm text-paper/85 hover:bg-white/5">
+      <div class="border-t border-side-line p-3">
+        <label class="flex cursor-pointer items-center justify-between rounded-md px-3 py-2 text-sm text-side-ink/85 hover:bg-white/5">
           Sound for new orders
           <input v-model="sound" type="checkbox" class="h-4 w-4 accent-[#6D8196]" />
         </label>
+        <ThemeToggle label class="rounded-md text-side-ink/85 hover:bg-white/5" />
         <a
           v-if="shop.profile"
           :href="`/shops/${shop.profile.id}?preview=1`"
           target="_blank"
           rel="noopener"
-          class="flex items-center justify-between rounded-md px-3 py-2 text-sm text-paper/75 hover:bg-white/5 hover:text-paper"
+          class="flex items-center justify-between rounded-md px-3 py-2 text-sm text-side-ink/75 hover:bg-white/5 hover:text-side-ink"
         >
           View my shop <ExternalLink class="h-3.5 w-3.5" />
         </a>
         <div class="mt-2 flex items-center justify-between gap-2 px-3 py-1.5">
           <div class="min-w-0">
             <p class="truncate text-sm font-medium">{{ auth.user?.name }}</p>
-            <p class="truncate text-xs text-paper/75">{{ auth.user?.email }}</p>
+            <p class="truncate text-xs text-side-ink/75">{{ auth.user?.email }}</p>
           </div>
-          <button class="rounded-md p-2 text-paper/75 hover:bg-white/10 hover:text-paper" title="Log out" aria-label="Log out" @click="logout">
+          <button class="rounded-md p-2 text-side-ink/75 hover:bg-white/10 hover:text-side-ink" title="Log out" aria-label="Log out" @click="logout">
             <LogOut class="h-4 w-4" />
           </button>
         </div>

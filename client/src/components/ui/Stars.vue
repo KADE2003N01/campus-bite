@@ -11,8 +11,8 @@ const fill = (i) => Math.max(0, Math.min(1, props.value - (i - 1)));
     <svg v-for="i in 5" :key="i" :width="size" :height="size" viewBox="0 0 20 20">
       <defs>
         <linearGradient :id="`s${i}-${Math.round(value * 10)}`">
-          <stop :offset="`${fill(i) * 100}%`" stop-color="#4A4A4A" />
-          <stop :offset="`${fill(i) * 100}%`" stop-color="#CBCBCB" />
+          <stop :offset="`${fill(i) * 100}%`" style="stop-color: var(--color-star)" />
+          <stop :offset="`${fill(i) * 100}%`" style="stop-color: var(--color-star-off)" />
         </linearGradient>
       </defs>
       <path

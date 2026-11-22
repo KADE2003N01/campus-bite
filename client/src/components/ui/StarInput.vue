@@ -19,7 +19,7 @@ const words = ["", "Bad", "Not great", "Okay", "Good", "Excellent"];
       >
         <svg width="34" height="34" viewBox="0 0 20 20">
           <path
-            :fill="(hover || model) >= i ? '#4A4A4A' : '#CBCBCB'"
+            :style="{ fill: (hover || model) >= i ? 'var(--color-star)' : 'var(--color-star-off)' }"
             class="transition-colors"
             d="M10 1.5l2.6 5.5 6 .8-4.4 4.1 1.1 5.9L10 15l-5.3 2.8 1.1-5.9L1.4 7.8l6-.8z"
           />

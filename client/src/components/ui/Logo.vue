@@ -9,6 +9,6 @@ defineProps({ light: Boolean, compact: Boolean });
       <circle cx="16" cy="17.5" r="7.5" fill="none" :stroke="light ? '#4A4A4A' : '#FFFFE3'" stroke-width="3" />
       <path d="M16 5.5v6" stroke="#6D8196" stroke-width="3" stroke-linecap="round" />
     </svg>
-    <span v-if="!compact" class="display text-[1.3rem] font-semibold leading-none" :class="light ? 'text-paper' : 'text-ink'">CampusBite</span>
+    <span v-if="!compact" class="display text-[1.3rem] font-semibold leading-none" :class="light ? 'text-[#FFFFE3]' : 'text-ink'">CampusBite</span>
   </span>
 </template>

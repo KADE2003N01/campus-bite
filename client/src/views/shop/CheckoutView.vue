@@ -36,7 +36,7 @@ const canPlace = computed(() => cart.items.length && pickup.value && phoneOk.val
 const methods = [
   { id: "MOMO", name: "MTN MoMo", sub: "Approve the prompt on your phone", color: "#FFCC00" },
   { id: "AIRTEL", name: "Airtel Money", sub: "Approve the prompt on your phone", color: "#E40000" },
-  { id: "CASH", name: "Cash at pickup", sub: "Pay the vendor when you collect", color: "#4A4A4A" },
+  { id: "CASH", name: "Cash at pickup", sub: "Pay the vendor when you collect", color: "var(--color-ink-2)" },
 ];
 
 onMounted(async () => {
