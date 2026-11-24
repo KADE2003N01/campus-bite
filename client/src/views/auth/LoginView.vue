@@ -28,10 +28,7 @@ async function submit() {
   }
 }
 
-function demo(which) {
-  email.value = which === "vendor" ? "marie@campusbite.test" : "eric@campusbite.test";
-  password.value = "password123";
-}
+
 </script>
 
 <template>
@@ -57,14 +54,6 @@ function demo(which) {
     </form>
 
     <p class="mt-6 text-sm text-ink-2">New here? <RouterLink :to="{ name: 'register', query: route.query }" class="link">Create an account</RouterLink></p>
-
-    <div class="mt-10 rounded-lg border border-dashed border-line-3 p-4 text-sm">
-      <p class="eyebrow">Demo accounts</p>
-      <div class="mt-2 flex gap-2">
-        <button type="button" class="btn btn-outline btn-sm flex-1" @click="demo('student')">Student</button>
-        <button type="button" class="btn btn-outline btn-sm flex-1" @click="demo('vendor')">Vendor</button>
-      </div>
-    </div>
 
     <section class="mt-8 border-t border-line pt-5 text-xs leading-relaxed text-muted" aria-labelledby="disclaimer-title">
       <h2 id="disclaimer-title" class="eyebrow mb-2">Please note</h2>

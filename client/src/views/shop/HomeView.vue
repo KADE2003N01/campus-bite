@@ -188,7 +188,7 @@ onMounted(async () => {
     <section id="shops" class="mx-auto max-w-6xl px-4 pt-12 sm:px-6">
       <div class="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h2 class="display text-[1.9rem] font-semibold">Shops on campus</h2>
+          <h2 class="display text-[1.9rem] font-semibold">Shops in and around campus</h2>
           <p v-if="!loading" class="text-sm text-muted">{{ shown.length }} {{ shown.length === 1 ? "place" : "places" }}<template v-if="cuisine"> serving {{ cuisine.toLowerCase() }}</template></p>
         </div>
         <label class="flex items-center gap-2 text-sm text-ink-2">
@@ -230,7 +230,7 @@ onMounted(async () => {
       <div class="grid overflow-hidden rounded-xl bg-ink text-paper md:grid-cols-2">
         <div class="p-8 sm:p-10">
           <p class="eyebrow text-paper/60">For stall owners</p>
-          <h2 class="display mt-3 text-3xl font-semibold leading-tight">Run a kiosk or café on campus?</h2>
+          <h2 class="display mt-3 text-3xl font-semibold leading-tight">Run a kiosk or café in and around campus?</h2>
           <p class="mt-3 max-w-md text-paper/75">Get orders before the lunch rush, see what sells, and stop losing customers to the queue. Free while we're in pilot.</p>
           <RouterLink :to="{ name: 'register', query: { as: 'vendor' } }" class="btn btn-lg mt-6 bg-paper text-ink hover:bg-white">List your stall</RouterLink>
         </div>

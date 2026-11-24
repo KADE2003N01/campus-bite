@@ -84,7 +84,7 @@ router.beforeEach(async (to) => {
 
 router.afterEach((to) => {
   const t = to.meta.title;
-  document.title = t ? `${t} · CampusBite` : "CampusBite · Order ahead on campus";
+  document.title = t ? `${t} · CampusBite` : "CampusBite · Order ahead";
 });
 
 export default router;

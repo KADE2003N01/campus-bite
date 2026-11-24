@@ -53,7 +53,7 @@ function submit() {
         <input id="sf-phone" v-model="form.phone" class="field" required inputmode="tel" maxlength="20" placeholder="0788 123 456" />
       </div>
       <div class="sm:col-span-2">
-        <label class="label" for="sf-loc">Where on campus?</label>
+        <label class="label" for="sf-loc">Where in and around campus?</label>
         <input id="sf-loc" v-model="form.location" class="field" required maxlength="120" placeholder="e.g. Behind the Main Library" />
         <p class="hint">Customers use this to find you at pickup. Be specific.</p>
       </div>

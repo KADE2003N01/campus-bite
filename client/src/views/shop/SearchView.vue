@@ -174,7 +174,7 @@ onMounted(async () => {
     </ul>
 
     <div v-else-if="searched" class="mt-10 text-center">
-      <p class="display text-2xl font-semibold">Nobody on campus sells "{{ q || category }}" yet</p>
+      <p class="display text-2xl font-semibold">No shops in and around campus sell "{{ q || category }}" yet</p>
       <p class="mt-1 text-sm text-muted">Try a broader word, like "rice" or "juice".</p>
     </div>
 

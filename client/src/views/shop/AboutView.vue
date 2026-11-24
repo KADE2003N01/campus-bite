@@ -58,7 +58,7 @@ const fmtSecs = (s) => (s == null ? "—" : s < 60 ? `${s} s` : `${Math.floor(s 
     <p class="eyebrow">About the project</p>
     <h1 class="display mt-2 text-[2.4rem] font-semibold leading-tight sm:text-5xl">Pre-ordering built around how students and vendors actually work</h1>
     <p class="mt-5 max-w-2xl text-lg leading-relaxed text-ink-2">
-      CampusBite connects students at UR-CST with small food vendors on campus. Students view menus, compare prices and pre-order for a pickup time.
+      CampusBite connects students at UR-CST with food shops in and around campus. Students view menus, compare prices and pre-order for a pickup time.
       Vendors publish meals and manage orders from a simple dashboard. Version 1 is pickup only.
     </p>
 
