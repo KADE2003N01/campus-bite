@@ -3,6 +3,7 @@ import { ref } from "vue";
 import api, { errMsg } from "../../composables/useApi.js";
 import { useToast } from "../../composables/useToast.js";
 import { ago } from "../../lib/format.js";
+import { assetUrl } from "../../lib/urls.js";
 import Stars from "../ui/Stars.vue";
 
 const props = defineProps({ review: Object });
@@ -42,7 +43,7 @@ async function save(text) {
     <p class="mt-2 text-sm leading-relaxed" :class="review.comment ? 'text-ink' : 'italic text-muted'">{{ review.comment || "Left a rating without a comment." }}</p>
     <div v-if="review.photos.length" class="mt-3 flex flex-wrap gap-2">
       <button v-for="(p, i) in review.photos" :key="p.id" class="overflow-hidden rounded-md" @click="emit('photo', review, i)">
-        <img :src="p.url" alt="Customer photo" class="h-20 w-20 object-cover transition hover:opacity-85" loading="lazy" />
+        <img :src="assetUrl(p.url)" alt="Customer photo" class="h-20 w-20 object-cover transition hover:opacity-85" loading="lazy" />
       </button>
     </div>
 

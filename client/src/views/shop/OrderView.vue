@@ -7,6 +7,7 @@ import { usePolling } from "../../composables/usePolling.js";
 import { useLive } from "../../composables/useLive.js";
 import { useRealtime } from "../../composables/useRealtime.js";
 import { rwf, clock, when, minutesUntil, STATUS, PAYMENT } from "../../lib/format.js";
+import { assetUrl } from "../../lib/urls.js";
 import StatusPill from "../../components/ui/StatusPill.vue";
 import Stars from "../../components/ui/Stars.vue";
 import FoodImage from "../../components/ui/FoodImage.vue";
@@ -194,7 +195,7 @@ function reviewed(review) {
               <p v-if="order.review.comment" class="mt-2 text-ink-2">{{ order.review.comment }}</p>
               <div v-if="order.review.photos?.length" class="mt-3 flex gap-2">
                 <button v-for="(p, i) in order.review.photos" :key="p.id" class="h-20 w-20 overflow-hidden rounded-md" @click="photoIndex = i">
-                  <img :src="p.url" class="h-full w-full object-cover" alt="Your photo" />
+                <img :src="assetUrl(p.url)" class="h-full w-full object-cover" alt="Your photo" />
                 </button>
               </div>
               <div v-if="order.review.vendor_reply" class="mt-4 border-l-2 border-forest pl-4 text-sm">

@@ -1,5 +1,6 @@
 <script setup>
 import { reactive, ref, watch, computed } from "vue";
+import { assetUrl } from "../../lib/urls.js";
 import Modal from "../ui/Modal.vue";
 import FoodImage from "../ui/FoodImage.vue";
 import api, { errMsg } from "../../composables/useApi.js";
@@ -30,7 +31,7 @@ watch(
   },
 );
 
-const shownImage = computed(() => preview.value || (removeImage.value ? null : props.item?.image_url));
+const shownImage = computed(() => assetUrl(preview.value || (removeImage.value ? null : props.item?.image_url)));
 
 function pickFile(e) {
   const f = e.target.files?.[0];

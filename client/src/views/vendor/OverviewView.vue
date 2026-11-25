@@ -3,6 +3,7 @@ import { ref, computed, onMounted } from "vue";
 import api, { errMsg } from "../../composables/useApi.js";
 import { useToast } from "../../composables/useToast.js";
 import { rwf, num, ago, STATUS } from "../../lib/format.js";
+import { assetUrl } from "../../lib/urls.js";
 import KpiCard from "../../components/vendor/KpiCard.vue";
 import FoodImage from "../../components/ui/FoodImage.vue";
 import Stars from "../../components/ui/Stars.vue";
@@ -183,7 +184,7 @@ function dayName(date) {
             </div>
             <p class="mt-1 line-clamp-2 text-sm text-ink-2">{{ r.comment || "No comment, just a rating." }}</p>
           </div>
-          <img v-if="r.photos.length" :src="r.photos[0].url" alt="" class="h-14 w-14 shrink-0 rounded-md object-cover" />
+            <img v-if="r.photos.length" :src="assetUrl(r.photos[0].url)" alt="" class="h-14 w-14 shrink-0 rounded-md object-cover" />
         </li>
       </ul>
       <p v-else class="border-t border-line px-5 py-8 text-center text-sm text-muted">No reviews yet.</p>

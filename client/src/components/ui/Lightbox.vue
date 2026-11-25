@@ -1,5 +1,6 @@
 <script setup>
 import { watch, onBeforeUnmount } from "vue";
+import { assetUrl } from "../../lib/urls.js";
 const props = defineProps({ photos: Array, index: Number });
 const emit = defineEmits(["close", "update:index"]);
 const go = (d) => emit("update:index", (props.index + d + props.photos.length) % props.photos.length);
@@ -20,7 +21,7 @@ onBeforeUnmount(() => window.removeEventListener("keydown", onKey));
   <Teleport to="body">
     <Transition name="fade">
       <div v-if="index != null && photos?.length" class="fixed inset-0 z-[80] flex items-center justify-center bg-black/90 p-4" @click.self="emit('close')">
-        <img :src="photos[index].url" class="max-h-[85vh] max-w-full rounded-md object-contain" alt="Customer photo" />
+        <img :src="assetUrl(photos[index].url)" class="max-h-[85vh] max-w-full rounded-md object-contain" alt="Customer photo" />
         <p v-if="photos[index].caption" class="absolute bottom-6 left-1/2 max-w-md -translate-x-1/2 text-center text-sm text-white/80">{{ photos[index].caption }}</p>
         <button class="absolute right-4 top-4 rounded-full bg-white/10 p-2.5 text-white hover:bg-white/20" aria-label="Close" @click="emit('close')">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18" /></svg>

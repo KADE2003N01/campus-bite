@@ -1,4 +1,5 @@
 <script setup>
+import { assetUrl } from "../../lib/urls.js";
 import { ref, computed } from "vue";
 const props = defineProps({
   src: String,
@@ -6,6 +7,7 @@ const props = defineProps({
   rounded: { type: String, default: "rounded-xl" },
   eager: Boolean,
 });
+const imageSrc = computed(() => assetUrl(props.src));
 const failed = ref(false);
 // placeholder tiles (no photo): palette tints, with darker versions for dark mode
 const palette = [
@@ -22,7 +24,7 @@ const letter = computed(() => props.alt.replace(/[^A-Za-z]/g, "").slice(0, 1).to
   <div class="relative overflow-hidden" :class="[rounded, tone]">
     <img
       v-if="src && !failed"
-      :src="src"
+      :src="imageSrc"
       :alt="alt"
       :loading="eager ? 'eager' : 'lazy'"
       :fetchpriority="eager ? 'high' : undefined"

@@ -1,5 +1,6 @@
 <script setup>
 import { ago } from "../../lib/format.js";
+import { assetUrl } from "../../lib/urls.js";
 import Stars from "../ui/Stars.vue";
 
 defineProps({ review: Object, shopName: String });
@@ -28,7 +29,7 @@ const emit = defineEmits(["photo"]);
         :aria-label="`Open photo ${i + 1}`"
         @click="emit('photo', i)"
       >
-        <img :src="p.url" alt="Customer photo" loading="lazy" class="h-full w-full object-cover" />
+        <img :src="assetUrl(p.url)" alt="Customer photo" loading="lazy" class="h-full w-full object-cover" />
       </button>
     </div>
     <div v-if="review.vendor_reply" class="mt-4 border-l-2 border-forest pl-4">

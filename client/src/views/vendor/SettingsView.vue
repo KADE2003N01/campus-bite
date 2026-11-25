@@ -1,5 +1,6 @@
 <script setup>
 import { ref, reactive, watch } from "vue";
+import { assetUrl } from "../../lib/urls.js";
 import { useShopStore } from "../../stores/shop.js";
 import { useAuthStore } from "../../stores/auth.js";
 import { useToast } from "../../composables/useToast.js";
@@ -98,7 +99,7 @@ async function changePassword() {
     <div class="space-y-8">
       <section id="photos" class="card overflow-hidden">
         <div class="relative h-40 bg-paper-2 sm:h-52">
-          <img v-if="shop.profile?.cover_url" :src="shop.profile.cover_url" alt="Shop cover" class="h-full w-full object-cover" />
+          <img v-if="shop.profile?.cover_url" :src="assetUrl(shop.profile.cover_url)" alt="Shop cover" class="h-full w-full object-cover" />
           <div v-else class="flex h-full items-center justify-center text-sm text-muted">No cover photo yet</div>
           <label class="btn btn-outline btn-sm absolute bottom-3 right-3 cursor-pointer">
             {{ uploading === "cover" ? "Uploading…" : shop.profile?.cover_url ? "Change cover" : "Upload cover" }}

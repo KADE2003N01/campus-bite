@@ -5,6 +5,7 @@ import api, { errMsg } from "../../composables/useApi.js";
 import { useCartStore } from "../../stores/cart.js";
 import { useAuthStore } from "../../stores/auth.js";
 import { rwf, withinHours } from "../../lib/format.js";
+import { assetUrl } from "../../lib/urls.js";
 import DishRow from "../../components/shop/DishRow.vue";
 import ReviewCard from "../../components/shop/ReviewCard.vue";
 import FavButton from "../../components/shop/FavButton.vue";
@@ -270,7 +271,7 @@ watch(() => route.params.id, (id) => id && load(), { immediate: true });
               <p class="text-sm font-semibold">Photos from customers</p>
               <div class="no-scrollbar mt-3 flex gap-2 overflow-x-auto">
                 <button v-for="(p, i) in reviewPhotos" :key="p.id" class="h-28 w-28 shrink-0 overflow-hidden rounded-md hover:opacity-90" @click="openGalleryPhoto(i)">
-                  <img :src="p.url" alt="Customer photo" loading="lazy" class="h-full w-full object-cover" />
+                  <img :src="assetUrl(p.url)" alt="Customer photo" loading="lazy" class="h-full w-full object-cover" />
                 </button>
               </div>
             </div>

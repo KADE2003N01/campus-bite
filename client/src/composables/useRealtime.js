@@ -1,6 +1,9 @@
 // Live order updates over Server-Sent Events.
 // Uses fetch (not EventSource) so the login token travels in the Authorization header, never in the URL.
 import { ref } from "vue";
+import { API_BASE_URL } from "../lib/urls.js";
+
+const STREAM_URL = `${API_BASE_URL.replace(/\/$/, "")}/stream`;
 
 const connected = ref(false);
 const listeners = new Map(); // event name -> Set<fn>
@@ -39,7 +42,7 @@ function parse(chunk) {
 async function open(token) {
   controller = new AbortController();
   try {
-    const res = await fetch("/api/v1/stream", {
+    const res = await fetch(STREAM_URL, {
       headers: { Authorization: `Bearer ${token}`, Accept: "text/event-stream" },
       signal: controller.signal,
     });
