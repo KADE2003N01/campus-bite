@@ -4,7 +4,7 @@ Food pre-ordering for the UR-CST campus. Students browse stalls, compare dishes,
 
 **Stack:** Vue 3 · Pinia · Tailwind CSS v4 · Vite — Express 5 · Prisma 6 · PostgreSQL
 
-> Academic prototype by Group 5, Year 3 Computer Science, University of Rwanda (UR-CST). Food photos come from [Unsplash](https://unsplash.com) under the Unsplash License. All shops, people, orders and reviews in the demo data are fictional, and no real payments are made.
+> Academic prototype by Group 5, Year 3 Computer Science, University of Rwanda (UR-CST). Food photos come from [Unsplash](https://unsplash.com) under the Unsplash License. The original demo seed's shops, people, orders and reviews are fictional, and no real payments are made. The optional UR-CST-area directory seed uses public place names and locations; those venues are not CampusBite partners and cannot take orders.
 
 ![Vendor receiving a new order](docs/screenshots/order-flow/12-vendor-receives-new-order.png)
 
@@ -123,6 +123,14 @@ It takes about two seconds and prints a summary like this:
 - Saved shops, plus checkout-time and ease-of-ordering samples for the evaluation page.
 
 **Re-seeding.** Run `npm run db:seed` again at any time to reset to a clean demo state. This is useful after testing. If you change `schema.prisma`, run `npx prisma db push` first.
+
+**Nearby directory entries.** To add unclaimed UR-CST-area place listings without truncating any tables or adding fabricated orders, reviews, menus, or prices, run:
+
+```bash
+npm run db:seed:nearby
+```
+
+This idempotent command adds the campus restaurant/canteens and nearby public listings. The records are closed to ordering until venue details are verified and an authorized vendor account is configured. Their Unsplash cover photos are representative only and may not depict those venues. The campus locations follow the [official UR-CST Nyarugenge campus map](https://cst.ur.ac.rw/IMG/pdf/ur_nyarugenge_campus_map_eighth_version_.pdf); nearby place names/locations were cross-checked against [KN 7 Avenue's OpenStreetMap-based directory](https://rwanda-streets.openalfa.com/streets/kn-7-av-kigali-gasabo-kigali-city-rwanda) and [Al Mann & RaN Coffee House's website](https://almanncoffeehouse.com/). Confirm details with each venue before enabling orders.
 
 **Start the API:**
 

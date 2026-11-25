@@ -8,6 +8,7 @@
     "start": "node src/index.js",
     "db:push": "npx prisma db push",
     "db:seed": "node prisma/seed.js",
+    "db:seed:nearby": "node prisma/seed-ur-cst-nearby.js",
     "db:studio": "npx prisma studio",
     "test:smoke": "node scripts/smoke-test.js"
   },

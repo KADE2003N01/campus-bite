@@ -162,7 +162,8 @@ watch(() => route.params.id, (id) => id && load(), { immediate: true });
             </div>
             <div class="text-ink-2">Ready in {{ vendor.prep_minutes }}–{{ vendor.prep_minutes + 10 }} min</div>
             <div class="text-ink-2">{{ vendor.location }}</div>
-            <a :href="`tel:${vendor.phone}`" class="num text-ink-2 underline-offset-4 hover:underline">{{ vendor.phone }}</a>
+            <a v-if="vendor.phone && vendor.phone !== 'Not publicly listed'" :href="`tel:${vendor.phone}`" class="num text-ink-2 underline-offset-4 hover:underline">{{ vendor.phone }}</a>
+            <span v-else class="text-ink-2">Contact details not listed</span>
           </dl>
         </div>
         <FavButton v-if="!auth.isVendor" :vendor-id="vendor.id" :value="vendor.is_favorite" class="shrink-0 self-start md:self-end" />
@@ -209,7 +210,9 @@ watch(() => route.params.id, (id) => id && load(), { immediate: true });
               />
             </div>
           </section>
-          <p v-if="!grouped.length" class="py-12 text-center text-muted">No dishes match "{{ menuQ }}".</p>
+          <p v-if="!grouped.length" class="py-12 text-center text-muted">
+            {{ items.length ? `No dishes match "${menuQ}".` : "Menu details have not been added yet. This directory listing is not taking orders." }}
+          </p>
         </div>
 
         <!-- Basket summary -->
